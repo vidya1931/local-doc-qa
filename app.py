@@ -1,15 +1,31 @@
 import streamlit as st
 import json
 from llama_cpp import Llama
+from translator import load_language
 
+# Language selector
+language = st.sidebar.selectbox(
+    "Select Language",
+    ["English", "తెలుగు"]
+)
+
+# Load translations
+if language == "English":
+    lang = load_language("en")
+else:
+    lang = load_language("te")
+
+# Load model
 llm = Llama(
     model_path="models/tinyllama.gguf",
     n_ctx=2048
 )
 
-st.title("Local Document Q&A")
+# Title
+st.title(lang["title"])
 
-question = st.text_input("Ask a question")
+# Question box
+question = st.text_input(lang["question"])
 
 if question:
 
@@ -32,16 +48,17 @@ if question:
             best_section = section
 
     prompt = f"""
-    Context:
-    {best_section['content']}
+Context:
+{best_section['content']}
 
-    Question:
-    {question}
+Question:
+{question}
 
-    Answer:
-    """
+Answer:
+"""
 
-    response = llm(prompt, max_tokens=200)
+    with st.spinner(lang["processing"]):
+        response = llm(prompt, max_tokens=200)
 
+    st.subheader(lang["answer"])
     st.write(response["choices"][0]["text"])
-
